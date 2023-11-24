@@ -1,7 +1,7 @@
 from mesa import Model
 from mesa.space import MultiGrid
 from mesa.time import RandomActivation
-from agent import HappinessAgent
+from agent import CustomerAgent
 from mesa.datacollection import DataCollector
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -16,7 +16,7 @@ class HappinessModel(Model):
 
         # Create agents
         for i in range(self.num_agents):
-            agent = HappinessAgent(i, self)
+            agent = CustomerAgent(i, self)
             #x = random.randrange(self.grid.width)
             #y = random.randrange(self.grid.height)
             #self.grid.place_agent(agent, (x, y))
