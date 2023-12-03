@@ -17,7 +17,7 @@ class DiscriminationModel(Model):
             agent = CustomerNewAgent(i, self)
             self.schedule.add(agent)
 
-        self.datacollector = DataCollector(agent_reporters={"Discrimination": "discriminated", "BuyCount": "buy_count", "Ethnicity": "ethnic"})
+        self.datacollector = DataCollector(agent_reporters={"Discrimination": "discriminated", "Ethnicity": "ethnic"})
 
     def step(self):
         self.datacollector.collect(self)
@@ -98,11 +98,7 @@ class DiscriminationModel(Model):
         self.schedule = new_schedule
 
         # Clear data collector
-        self.datacollector = DataCollector(agent_reporters={"Discrimination": "discriminated", "BuyCount": "buy_count", "Ethnicity": "ethnic"})
-
-
-        # Reset social support slider
-        #social_support_slider.reset()
+        self.datacollector = DataCollector(agent_reporters={"Discrimination": "discriminated", "Ethnicity": "ethnic"})
 
         # Clear previous plot
         ax.clear()
