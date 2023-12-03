@@ -10,9 +10,18 @@ class CustomerOnlineExperienceAgent(Agent):
         self.age = self.random.randint(18, 80)
         self.ethnic = self.get_ethnicity()
         self.step_count = 0
-        self.social_support = 0.1
-        self.last_social_support = self.get_social_support()
-        self.experience_with_online_services = 0.9
+        self.social_support = 0
+        self.social_support_change = 0
+        self.experience_with_online_services = 0  # self.get_initial_experience() Initialize as neutral
+
+    def get_initial_experience(self):
+        if self.ethnic == "White":
+            return random.choice([1, 0,-1,1,1,0])  # Choose from 1 or 0 for more positive values
+        elif self.ethnic == "Asian":
+            return random.choice([-1, 0, 1,0])  # Choose from -1, 0, or 1 for a balanced range
+        else:
+            return random.choice([0, -1,-1,-1,-1,1])  # Choose from 0 or 1 for more positive values
+
 
     def get_social_support(self):
         # Set social support based on ethnicity
@@ -36,23 +45,16 @@ class CustomerOnlineExperienceAgent(Agent):
     def step(self):
         self.step_count += 1
 
+        # change online experience according to social support change
         if self.ethnic == "White":
-            if self.experience_with_online_services < 1 and self.experience_with_online_services > 0:
-                # Decrease online experience with increasing social support for White
-                self.experience_with_online_services -= 0.01 * (self.last_social_support - self.social_support)
-
+                self.experience_with_online_services +=  0.01 * (self.social_support_change)
         elif self.ethnic == "Asian":
-            self.experience_with_online_services -= 0.02 * (self.last_social_support - self.social_support)
-
+                self.experience_with_online_services +=  0.02 * (self.social_support_change)
         else:
-            if self.experience_with_online_services < 1 and self.experience_with_online_services > 0:
-                # Increase online experience with decreasing social support for Black
-                self.experience_with_online_services -= 0.03 * (self.last_social_support - self.social_support)
+                self.experience_with_online_services +=  0.03 * (self.social_support_change)
 
-        if self.experience_with_online_services > 1:
-            self.experience_with_online_services = 1
-        if self.experience_with_online_services < 0:
-            self.experience_with_online_services = 0
+        # Ensure the experience is within the valid range
+        self.experience_with_online_services = max(-1, min(1, self.experience_with_online_services))
 
         # Print statements for debugging
         print(f"Agent {self.unique_id}")
@@ -60,5 +62,5 @@ class CustomerOnlineExperienceAgent(Agent):
         print(f"Ethnicity: {self.ethnic}")
         print(f"Online Experience: {self.experience_with_online_services}")
         print(f"Social Support: {self.social_support}")
-        print(f"Last Social Support: {self.last_social_support}")
+        print(f"Social Support Change: {self.social_support_change}")
         print("------")

@@ -1,3 +1,5 @@
+# File: modelOnlineExperience.py
+
 from mesa import Model
 from mesa.space import MultiGrid
 from mesa.time import RandomActivation
@@ -31,14 +33,14 @@ class OnlineExperienceModel(Model):
         # Ensure the step count is an integer
         step_count = 20
 
-        # Create dictionaries to store discrimination data for each ethnic group
-        discrimination_data = {"Black": [], "White": [], "Asian": []}
+        # Create dictionaries to store experience with online services data for each ethnic group
+        experience_with_online_services_data = {"Black": [], "White": [], "Asian": []}
 
         # Clear Agents
         for agent in self.schedule.agents:
-            agent.experience_with_online_services = 0.9
+            agent.experience_with_online_services = 0  # agent.get_initial_experience()
             agent.step_count = 0
-            agent.last_social_support = agent.get_social_support()
+            agent.last_social_support = 0
 
         # Iterate over the selected social support values in 20 steps
         for step in range(step_count):
@@ -46,30 +48,26 @@ class OnlineExperienceModel(Model):
             # Adjust social support based on the slider value
             social_support = val
 
-            # Set social support for each agent in the model
+            # Set social support for each agent in the model. Selected social_supoort value is increased in equal step_count interval
             for agent in self.schedule.agents:
-
-                if agent.social_support < social_support:
-                    agent.last_social_support = agent.social_support + social_support * (step_count - step) / step_count
-                else:
-                    agent.last_social_support = agent.social_support - social_support * (step_count - step) / step_count
-    
+                agent.social_support_change = (social_support- agent.social_support) * step / step_count*1.0
+                agent.social_support_change  = max(-1, min(1, agent.social_support_change ))
                 agent.step()
                 
             self.step()
 
-            # Collect discrimination data for each ethnic group for the current step
+            # Collect Experience with Online Services data for each ethnic group for the current step
             agent_data = self.datacollector.get_agent_vars_dataframe().reset_index()
-            for ethnic_group in discrimination_data.keys():
+            for ethnic_group in experience_with_online_services_data.keys():
                 group_data = agent_data[agent_data['Ethnicity'] == ethnic_group]
-                avg_discrimination = group_data['Experience with Online Services'].mean()
-                discrimination_data[ethnic_group].append(avg_discrimination)
+                avg_experience_with_online_services = group_data['Experience with Online Services'].mean()
+                experience_with_online_services_data[ethnic_group].append(avg_experience_with_online_services)
 
         # Clear previous plot
         ax.clear()
 
-        # Plot discrimination values for each ethnic group over 20 steps
-        for ethnic_group, values in discrimination_data.items():
+        # Plot Experience with Online Services values for each ethnic group over 20 steps
+        for ethnic_group, values in experience_with_online_services_data.items():
             ax.plot(range(1, step_count + 1), values, marker='o', label=f'{ethnic_group} Group')
 
         # Set labels and title
@@ -79,6 +77,9 @@ class OnlineExperienceModel(Model):
 
         # Set the major ticks on the x-axis with intervals of 1
         ax.set_xticks(range(1, step_count + 1))
+
+        # Set initial y-axis limits between -1 and 1
+        ax.set_ylim(-1, 1)
 
         # Show updated plot
         ax.legend(loc="upper left")
@@ -103,12 +104,12 @@ class OnlineExperienceModel(Model):
         # Clear previous plot
         ax.clear()
 
-        # Plot average discrimination over time for each ethnic group with error bars
+        # Plot average Experience with Online Services over time for each ethnic group with error bars
         ethnic_data = self.datacollector.get_agent_vars_dataframe().reset_index()
-        discrimination_data = ethnic_data.groupby(['Step', 'Ethnicity'])['Experience with Online Services'].mean().reset_index()
+        experience_with_online_services_data = ethnic_data.groupby(['Step', 'Ethnicity'])['Experience with Online Services'].mean().reset_index()
 
-        for ethnic_group in discrimination_data['Ethnicity'].unique():
-            group_data = discrimination_data[discrimination_data['Ethnicity'] == ethnic_group]
+        for ethnic_group in experience_with_online_services_data['Ethnicity'].unique():
+            group_data = experience_with_online_services_data[experience_with_online_services_data['Ethnicity'] == ethnic_group]
 
             if not group_data.empty:
                 # Round the step values to integers for the plot
@@ -141,6 +142,9 @@ class OnlineExperienceModel(Model):
         ax.legend(loc="upper left")
         plt.grid(True, linestyle='--', alpha=0.7)
 
+        # Set initial y-axis limits between -1 and 1
+        ax.set_ylim(-1, 1)
+
         # Show the updated plot
         plt.draw()
 
@@ -151,12 +155,13 @@ class OnlineExperienceModel(Model):
         reset_button.on_clicked(self.reset_agents)
         return reset_button
 
+
 # Initial values
 width = 10
 height = 10
 
 # Create initial model
-model = OnlineExperienceModel(6, width, height)  # Set the initial number of agents to 6
+model = OnlineExperienceModel(26, width, height)  # Set the initial number of agents to 26
 
 # Initial collected data
 agent_data = model.datacollector.get_agent_vars_dataframe().reset_index()
@@ -168,7 +173,7 @@ sns.set(style="whitegrid")
 # Create a figure with subplots
 fig, ax = plt.subplots(figsize=(12, 8))
 
-# Plot average discrimination over time for each ethnic group with error bars
+# Plot average Experience with Online Services over time for each ethnic group with error bars
 ethnic_data = agent_data.groupby(['Step', 'Ethnicity'])['Experience with Online Services'].mean().reset_index()
 for ethnic_group in ethnic_data['Ethnicity'].unique():
     group_data = ethnic_data[ethnic_data['Ethnicity'] == ethnic_group]
@@ -201,6 +206,9 @@ reset_button = model.create_reset_button()
 # Set legend and adjust layout
 ax.legend(loc="upper left")
 plt.grid(True, linestyle='--', alpha=0.7)
+
+# Set initial y-axis limits between -1 and 1
+ax.set_ylim(-1, 1)
 
 # Show the updated plot
 plt.show()
