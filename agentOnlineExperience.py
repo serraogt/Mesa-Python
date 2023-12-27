@@ -17,11 +17,11 @@ class CustomerOnlineExperienceAgent(Agent):
         
     def get_initial_experience(self):
         if self.ethnic == "White":
-            return random.choice([1, 0, -1, 1, 1, 0])  # Choose from 1 or 0 for more positive values
+            return random.choice([1, 0, -1, 1, 1, 0]) * 1.0  # Choose from 1 or 0 for more positive values
         elif self.ethnic == "Asian":
-            return random.choice([-1, 0, 1, 0])  # Choose from -1, 0, or 1 for a balanced range
+            return random.choice([-1, 0, 1, 0]) * 1.0 # Choose from -1, 0, or 1 for a balanced range
         else:
-            return random.choice([0, -1, 0, -1, -1, 1])  # Choose from 0 or 1 for more positive values
+            return random.choice([0, -1, 0, -1, -1, 1]) * 1.0 # Choose from 0 or 1 for more positive values
 
     def get_social_support(self):
         # Set social support based on ethnicity
@@ -50,11 +50,11 @@ class CustomerOnlineExperienceAgent(Agent):
 
         # change online experience according to social support change
         if self.ethnic == "White":
-            self.experience_with_online_services = self.get_initial_experience + ( 0.1 * (self.social_support))
+            self.experience_with_online_services = self.get_initial_experience() + ( 0.1 * ((self.social_support)*1.0))
         elif self.ethnic == "Asian":
-            self.experience_with_online_services = self.get_initial_experience + ( 0.2 * (self.social_support))
+            self.experience_with_online_services = self.get_initial_experience() + ( 0.2 * ((self.social_support)*1.0))
         else:
-            self.experience_with_online_services = self.get_initial_experience + ( 0.3 * (self.social_support))
+            self.experience_with_online_services = self.get_initial_experience() + ( 0.3 * ((self.social_support)*1.0))
 
         # Ensure the experience is within the valid range
         self.experience_with_online_services = max(-1, min(1, self.experience_with_online_services))
