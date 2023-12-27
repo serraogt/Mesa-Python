@@ -1,5 +1,3 @@
-# File: modelOnlineExperience.py
-
 from mesa import Model
 from mesa.space import MultiGrid
 from mesa.time import RandomActivation
@@ -7,7 +5,6 @@ from mesa.datacollection import DataCollector
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Button
 from agentOnlineExperience import CustomerOnlineExperienceAgent
-import random
 
 class OnlineExperienceModel(Model):
     def __init__(self, N, width, height):
@@ -19,7 +16,8 @@ class OnlineExperienceModel(Model):
             agent = CustomerOnlineExperienceAgent(i, self)
             self.schedule.add(agent)
 
-        self.datacollector = DataCollector(agent_reporters={"Experience with Online Services": "experience_with_online_services", "Ethnicity": "ethnic"})
+        self.datacollector = DataCollector(agent_reporters={"Experience with Online Services": "experience_with_online_services", "Ethnicity": "ethnic"})        
+        #indent maybe? i will see
 
     def step(self):
         self.datacollector.collect(self)
@@ -31,29 +29,31 @@ class OnlineExperienceModel(Model):
 
     def update(self, val):
         # Ensure the step count is an integer
-        step_count = 20
+        step_count = 10
 
         # Create dictionaries to store experience with online services data for each ethnic group
         experience_with_online_services_data = {"Black": [], "White": [], "Asian": []}
 
         # Clear Agents
         for agent in self.schedule.agents:
-            agent.experience_with_online_services = 0  # agent.get_initial_experience()
+            agent.get_initial_experience()
             agent.step_count = 0
             agent.last_social_support = 0
 
         # Iterate over the selected social support values in 20 steps
         for step in range(step_count):
-            
             # Adjust social support based on the slider value
-            social_support = val
+            social_support = val 
 
-            # Set social support for each agent in the model. Selected social_supoort value is increased in equal step_count interval
+            # Set social support for each agent in the model. Selected social_support value is increased in equal step_count interval
             for agent in self.schedule.agents:
-                agent.social_support_change = (social_support- agent.social_support) * step / step_count*1.0
-                agent.social_support_change  = max(-1, min(1, agent.social_support_change ))
+              # agent.social_support_change = (social_support - agent.social_support) * step / step_count * 1.0 #equally divided for each step
+              # agent.social_support_change = max(-1, min(1, agent.social_support_change))
+              # THE ONE ABOVE IS CUMULATIVE, THE ONE BELOW IS BASED ON PERCENTAGE   
+                agent.social_support= social_support * step / step_count * 1.0  #equally divided for each step
+                agent.social_support= max(-1, min(1, agent.social_support_change))
                 agent.step()
-                
+
             self.step()
 
             # Collect Experience with Online Services data for each ethnic group for the current step
@@ -131,7 +131,7 @@ class OnlineExperienceModel(Model):
         social_support_slider = Slider(ax_social_support, 'Social Support', 0, 1, valinit=0.0, valstep=0.01)  # Set valinit to 0.0
 
         # Attach the sliders to the update function
-        social_support_slider.on_changed(model.update)
+        social_support_slider.on_changed(self.update) #why do we have this for the second time
 
         social_support_slider.label.set_text("")
 
@@ -155,6 +155,24 @@ class OnlineExperienceModel(Model):
         reset_button.on_clicked(self.reset_agents)
         return reset_button
 
+    def plot_agents_first_step(self):
+        # Create subplots for each agent
+        fig, axs = plt.subplots(5, 6, figsize=(15, 12))  # Assuming there are 26 agents, adjust rows and columns as needed
+
+        for i, agent in enumerate(self.schedule.agents):
+            row = i // 6
+            col = i % 6
+
+            # Plot experience for the first step
+            axs[row, col].plot([1], [agent.experience_with_online_services], marker='o', label=f'Agent {agent.unique_id}')
+            axs[row, col].set_title(f'Agent {agent.unique_id}')
+            axs[row, col].set_xlabel("Step")
+            axs[row, col].set_ylabel("Experience with Online Services")
+            axs[row, col].legend()
+
+        plt.tight_layout()
+        plt.show()
+
 
 # Initial values
 width = 10
@@ -163,8 +181,8 @@ height = 10
 # Create initial model
 model = OnlineExperienceModel(26, width, height)  # Set the initial number of agents to 26
 
-# Initial collected data
-agent_data = model.datacollector.get_agent_vars_dataframe().reset_index()
+# Plot every agent for the first step
+model.plot_agents_first_step()
 
 # Use Seaborn for improved styles
 import seaborn as sns
@@ -174,9 +192,10 @@ sns.set(style="whitegrid")
 fig, ax = plt.subplots(figsize=(12, 8))
 
 # Plot average Experience with Online Services over time for each ethnic group with error bars
-ethnic_data = agent_data.groupby(['Step', 'Ethnicity'])['Experience with Online Services'].mean().reset_index()
-for ethnic_group in ethnic_data['Ethnicity'].unique():
-    group_data = ethnic_data[ethnic_data['Ethnicity'] == ethnic_group]
+ethnic_data = model.datacollector.get_agent_vars_dataframe().reset_index()
+experience_with_online_services_data = ethnic_data.groupby(['Step', 'Ethnicity'])['Experience with Online Services'].mean().reset_index()
+for ethnic_group in experience_with_online_services_data['Ethnicity'].unique():
+    group_data = experience_with_online_services_data[experience_with_online_services_data['Ethnicity'] == ethnic_group]
 
     if not group_data.empty:
         # Round the step values to integers for the plot
