@@ -61,7 +61,7 @@ class OnlineExperienceModel(Model):
             agent_data = self.datacollector.get_agent_vars_dataframe().reset_index()
             for ethnic_group in spoken_data.keys():
                 group_data = agent_data[agent_data['Ethnicity'] == ethnic_group]
-                avg_english_speaking = group_data["Average English Speaking"].mean()
+                avg_english_speaking = group_data["spoken_english"].mean()
                 spoken_data[ethnic_group].append(avg_english_speaking)
 
         # Clear previous plot
@@ -107,7 +107,7 @@ class OnlineExperienceModel(Model):
 
         # Plot average Experience with Online Services over time for each ethnic group with error bars
         ethnic_data = self.datacollector.get_agent_vars_dataframe().reset_index()
-        spoken_data = ethnic_data.groupby(['Step', 'Ethnicity'])['Spoken English'].mean().reset_index()
+        spoken_data = ethnic_data.groupby(['Step', 'Ethnicity'])['spoken_english'].mean().reset_index()
 
         for ethnic_group in spoken_data['Ethnicity'].unique():
             group_data = spoken_data[spoken_data['Ethnicity'] == ethnic_group]
@@ -158,7 +158,7 @@ class OnlineExperienceModel(Model):
         reset_button = Button(ax_reset_button, 'Reset', color='lightgoldenrodyellow')
         reset_button.on_clicked(self.reset_agents)
         return reset_button
-
+    """
     def plot_agents_first_step(self):
         # Create subplots for each agent
         fig, axs = plt.subplots(5, 6, figsize=(15, 12))  # Assuming there are 26 agents, adjust rows and columns as needed
@@ -173,10 +173,10 @@ class OnlineExperienceModel(Model):
             axs[row, col].set_xlabel("Step")
             axs[row, col].set_ylabel("English Speaking")
             axs[row, col].legend()
-
+    
         plt.tight_layout()
         plt.show()
-
+"""
 
 # Initial values
 width = 10
@@ -186,7 +186,7 @@ height = 10
 model = OnlineExperienceModel(878, width, height)  # Set the initial number of agents to 878
 
 # Plot every agent for the first step
-model.plot_agents_first_step()
+#model.plot_agents_first_step()
 
 # Use Seaborn for improved styles
 import seaborn as sns
@@ -203,10 +203,11 @@ for ethnic_group in spoken_data['Ethnicity'].unique():
 
     if not group_data.empty:
         # Round the step values to integers for the plot
-        x_values = group_data['Step'].round(0).astype(int)
-        ax.errorbar(x_values, group_data["Average English Speaking"],
-                    yerr=group_data.groupby('Step')['"Average English Speaking"'].std(),
-                    label=f'{ethnic_group} Group', linewidth=2, marker='o')
+        ax.errorbar(x_values, group_data["spoken_english"],
+            yerr=group_data.groupby('Step')['spoken_english'].std(),
+            label=f'{ethnic_group} Group', linewidth=2, marker='o')
+
+
     else:
         print(f"No data for {ethnic_group} Group")
 
@@ -233,5 +234,6 @@ plt.grid(True, linestyle='--', alpha=0.7)
 # Set initial y-axis limits between -1 and 1
 ax.set_ylim(-1, 1)
 
+ax.legend()
 # Show the updated plot
 plt.show()
